@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <UseMsdeployExe>true</UseMsdeployExe>
+    <PowerShellFilename>test.ps1</PowerShellFilename>
+    <AllowUntrustedCertificate>True</AllowUntrustedCertificate>
+    <DeploymentFilesTempPath>C:\temp\_deploymentFiles\$(MSBuildProjectName)\</DeploymentFilesTempPath>
+    <!--<BeforeAddIisSettingAndFileContentsToSourceManifest>AddMSDeployProviderToManifest</BeforeAddIisSettingAndFileContentsToSourceManifest>-->
+    <AfterAddIisSettingAndFileContentsToSourceManifest>AddMSDeployProviderToManifest</AfterAddIisSettingAndFileContentsToSourceManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <DeploymentFiles Include="$(MSBuildProjectDirectory)/_deployment/**" />
+      <ExcludeFromPackageFiles Include="@(DeploymentFiles)">  
+        <FromTarget>Project</FromTarget> 
+      </ExcludeFromPackageFiles> 
+  </ItemGroup>
+
+  <Target Name="AddMSDeployProviderToManifest">    
+    <Copy SourceFiles="@(DeploymentFiles)" DestinationFolder="$(DeploymentFilesTempPath)" />
+          
+    <ItemGroup>
+      <MsDeploySourceManifest Include="dirPath">
+        <path>$(DeploymentFilesTempPath)</path>
+      </MsDeploySourceManifest>
+      <MsDeploySourceManifest Include="runCommand">
+        <path>PowerShell -NoProfile -ExecutionPolicy Bypass -File &quot;$(DeploymentFilesTempPath)$(PowerShellFilename)&quot;</path>
+        <waitInterval>2000</waitInterval>
+        <!--<AdditionalProviderSettings>waitInterval=20000</AdditionalProviderSettings>-->
+        <!--<AdditionalProviderSettings>MSDeploy.MSDeployKeyAttributeName=Run.bat</AdditionalProviderSettings>-->
+      </MsDeploySourceManifest>
+      <MsDeploySourceManifest Include="runCommand">
+        <path>rd $(DeploymentFilesTempPath) /s /q</path>
+      </MsDeploySourceManifest>
+    </ItemGroup>
+  </Target>
+
+</Project>
+
